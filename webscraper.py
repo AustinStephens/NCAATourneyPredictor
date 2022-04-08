@@ -3,7 +3,8 @@ import requests
 import csv
 
 teamNamesMascot = {'Gonzaga Bulldogs': 1211, 'Arizona Wildcats': 1112, 'Kansas Jayhawks': 1242, 'Baylor Bears': 1124, 'Auburn Tigers': 1120, 'Kentucky Wildcats': 1246, 'Villanova Wildcats': 1437, 'Duke Blue Devils': 1181, 'Wisconsin Badgers': 1458, 'Tennessee Volunteers': 1397, 'Purdue Boilermakers': 1345, 'Texas Tech Red Raiders': 1403, 'UCLA Bruins': 1417, 'Illinois Fighting Illini': 1228, 'Providence Friars': 1344, 'Arkansas Razorbacks': 1116, 'UConn Huskies': 1163, 'Houston Cougars': 1222, 'Saint Mary\'s Gaels': 1388, 'Iowa Hawkeyes': 1234, 'Alabama Crimson Tide': 1104, 'LSU Tigers': 1261, 'Texas Longhorns': 1400, 'Colorado State Rams': 1161, 'USC Trojans': 1425, 'Murray State Racers': 1293, 'Michigan State Spartans': 1277, 'Ohio State Buckeyes': 1326, 'Boise State Broncos': 1129, 'North Carolina Tar Heels': 1314, 'San Diego State Aztecs': 1361, 'Seton Hall Pirates': 1371, 'Creighton Bluejays': 1166, 'TCU Horned Frogs': 1395, 'Marquette Golden Eagles': 1266, 'Memphis Tigers': 1272, 'San Francisco Dons': 1362, 'Miami Hurricanes': 1274, 'Loyola Chicago Ramblers': 1260, 'Davidson Wildcats': 1172, 'Iowa State Cyclones': 1235, 'Michigan Wolverines': 1276, 'Wyoming Cowboys': 1461, 'Rutgers Scarlet Knights': 1353, 'Indiana Hoosiers': 1231, 'Virginia Tech Hokies': 1439, 'Notre Dame Fighting Irish': 1323, 'UAB Blazers': 1412, 'Richmond Spiders': 1350, 'New Mexico State Aggies': 1308, 'Chattanooga Mocs': 1151, 'South Dakota State Jackrabbits': 1355, 'Vermont Catamounts': 1436, 'Akron Zips': 1103, 'Longwood Lancers': 1255, 'Yale Bulldogs': 1463, 'Colgate Raiders': 1159, 'Montana State Bobcats': 1286, 'Delaware Blue Hens': 1174, 'Saint Peter\'s Peacocks': 1389, 'Jacksonville State Gamecocks': 1240, 'CSU Fullerton Titans': 1168, 'Georgia State Panthers': 1209, 'Norfolk State Spartans': 1313, 'Wright State Raiders': 1460, 'Bryant Bulldogs': 1136, 'Texas Southern Tigers': 1411, 'Texas A&M-CC Islanders': 1394}
-tourney_team_cards = []
+non_tourney_teams = {}
+team_ids = 1
 dict = {}
 
 main_page = requests.get('https://www.espn.com/mens-college-basketball/teams').text
@@ -11,10 +12,10 @@ main_page = requests.get('https://www.espn.com/mens-college-basketball/teams').t
 soup = BeautifulSoup(main_page, 'lxml')
 team_cards = soup.find_all('div', class_='mt3')
 
-for teams in team_cards:
-    team_name = teams.section.div.a.h2.text
-    if team_name in teamNamesMascot:
-        tourney_team_cards.append(teams)
+#for teams in team_cards:
+#    team_name = teams.section.div.a.h2.text
+#    if team_name in teamNamesMascot:
+#        tourney_team_cards.append(teams)
 
 main_url = "https://www.espn.com"
 
@@ -24,7 +25,7 @@ with open('2022RegularSeason.csv', 'w', newline='') as csvfile:
 
     writer.writeheader()
 
-    for team_card in tourney_team_cards:
+    for team_card in team_cards:
         url = team_card.section.div.div.find_all('span')[1].a.get("href", None)
         team_page = requests.get(main_url + url).text
         team_soup = BeautifulSoup(team_page, 'lxml')
@@ -43,7 +44,7 @@ with open('2022RegularSeason.csv', 'w', newline='') as csvfile:
                 tag = tds[1].div.find_all('span')
                 neutral_text = tag[2].text.split(" ")
                 neutral = len(neutral_text) > 1 and neutral_text[1] == "*"
-                print(neutral)
+                #print(neutral)
 
                 result_tag = tds[2].find_all('span')
                 result_td = result_tag[1].a
@@ -52,7 +53,7 @@ with open('2022RegularSeason.csv', 'w', newline='') as csvfile:
                 num_ot = '0'
                 if len(OT_arr[1]) > 0:
                     num_ot = OT_arr[1][0] if OT_arr[1][0] != 'O' else '1'
-                print(num_ot)
+                #print(num_ot)
                 game_url = result_td.get("href", None)
                 game_url_arr = game_url.split("/")
                 game_id = game_url_arr[len(game_url_arr) - 1]
@@ -63,31 +64,48 @@ with open('2022RegularSeason.csv', 'w', newline='') as csvfile:
                     game_soup = BeautifulSoup(game_page, 'lxml')
                     score_header = game_soup.find('div', class_="competitors")
 
+                    if score_header is None:
+                        continue;
+
                     t1_wrapper = score_header.find('div', class_="team away")
                     t1_score = t1_wrapper.div.find('div', class_="score-container").div.text
-                    print(t1_score)
+                    #print(t1_score)
 
                     t1_name_container = t1_wrapper.find('div', class_="team-container").find('div', class_="team-info-wrapper")
                     t1_name = ""
                     if t1_name_container.a:
                         t1_name_tags = t1_name_container.a.find_all('span')
                         t1_name = t1_name_tags[0].text + " " + t1_name_tags[1].text
+
                     t1_id = 0
                     if t1_name in teamNamesMascot:
                         t1_id = teamNamesMascot[t1_name]
+                    elif t1_name in non_tourney_teams:
+                        t1_id = non_tourney_teams[t1_name]
+                    else:
+                        non_tourney_teams[t1_name] = team_ids
+                        t1_id = team_ids
+                        team_ids += 1
 
                     t2_wrapper = score_header.find('div', class_="team home")
                     t2_score = t2_wrapper.div.find('div', class_="score-container").div.text
-                    print(t2_score)
+                    #print(t2_score)
 
                     t2_name_container = t2_wrapper.find('div', class_="team-container").find('div', class_="team-info-wrapper")
                     t2_name = ""
                     if t2_name_container.a:
                         t2_name_tags = t2_name_container.a.find_all('span')
                         t2_name = t2_name_tags[0].text + " " + t2_name_tags[1].text
+
                     t2_id = 0
                     if t2_name in teamNamesMascot:
                         t2_id = teamNamesMascot[t2_name]
+                    elif t2_name in non_tourney_teams:
+                        t2_id = non_tourney_teams[t2_name]
+                    else:
+                        non_tourney_teams[t2_name] = team_ids
+                        t2_id = team_ids
+                        team_ids += 1
 
                     t1win = int(t1_score) > int(t2_score)
 
