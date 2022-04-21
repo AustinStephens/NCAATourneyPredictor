@@ -56,3 +56,29 @@ def randomize_winner(trim_tourney_df, team_avgs, train_cols, seeds_df, cols, yea
             train_DF_temp = train_DF_temp.append(temp_series, ignore_index=True)
     return train_DF_temp
 
+
+def tourney_2022(team_ids, team_avgs_2022, test_cols):
+    temp_tourn_df = pd.DataFrame(data=team_ids)
+    # winners = [2,1,1,2,1,2,2,1,2,1,1,1,1,2,1,1,1,1,1,2,1,2,1,1,2,1,1,1,1,2,2,1,2,1,2,1,1,2,2,2,2,2,2,2,1,1,1,2,1,2,1,1,2,2,1,2,2,2,1,2,2,1,2,1,2,2,2]
+    tourney_2022_df = pd.DataFrame(columns=test_cols)
+
+    for row in temp_tourn_df.iterrows():
+        # Doing the same as before but without winner column
+        temp_list = [2022, row[1]['Team1ID'], row[1]['Team2ID']]
+        print(f"team2: ", row[1]['Team2ID'])
+        team1_row = team_avgs_2022[team_avgs_2022["TeamID"] == row[1]['Team1ID']].values.tolist()
+        team2_row = team_avgs_2022[team_avgs_2022["TeamID"] == row[1]['Team2ID']].values.tolist()
+        print(team2_row)
+        team1_row[0].pop(0)
+        team1_row[0].pop(0)
+        team2_row[0].pop(0)
+        team2_row[0].pop(0)
+
+        temp_list.extend(team1_row[0])
+        temp_list.extend(team2_row[0])
+
+        # add that list to our DF
+        temp_series = pd.Series(temp_list, index=test_cols)
+        tourney_2022_df = tourney_2022_df.append(temp_series, ignore_index=True)
+
+    return tourney_2022_df
