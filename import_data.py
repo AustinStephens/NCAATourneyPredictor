@@ -2,6 +2,67 @@ import pandas as pd
 import time
 
 
+# SoS Calculation
+def SoS_calc(input_df, output_df, year_range):  # input_df is the game by game df, output_df is the team_avgs df
+
+    sos_dict = {}
+    input_df['Season'] = pd.to_numeric(input_df['Season'])
+
+    for year in year_range:
+        working_df = input_df[input_df['Season'] == year]
+        working_df = working_df.filter(["WTeamID", "LTeamID"])
+
+        for row in working_df.itertuples(index=False):
+            winner = int(row[0])
+            loser = int(row[1])
+
+            if winner not in sos_dict:
+                temp_sos = {"opp_list": [loser], "wins": 1, "losses": 0, "win%": 0, "ow%": 0, "oow%": 0, "sos": 0}
+                sos_dict[winner] = temp_sos.copy()
+                temp_sos.clear()
+            else:
+                sos_dict[winner]["opp_list"].append(loser)
+                sos_dict[winner]["wins"] += 1
+
+            if loser not in sos_dict:
+                temp_sos = {"opp_list": [winner], "wins": 0, "losses": 1, "win%": 0, "ow%": 0, "oow%": 0, "sos": 0}
+                sos_dict[loser] = temp_sos.copy()
+                temp_sos.clear()
+            else:
+                sos_dict[loser]["opp_list"].append(winner)
+                sos_dict[loser]["losses"] += 1
+
+        for calc in ["win%", "ow%", "oow%", "sos"]:
+            for k, d in sos_dict.items():
+                if calc == "win%":
+                    d["win%"] = d["wins"] / (d["wins"] + d["losses"])
+
+                if calc == "ow%":
+                    sum_wp = 0
+                    num = 0
+                    for opp in d["opp_list"]:
+                        sum_wp += sos_dict[opp]["win%"]
+                        num += 1
+                    d["ow%"] = (sum_wp / num)
+
+                if calc == "oow%":
+                    sum_ow = 0
+                    num = 0
+                    for opp in d["opp_list"]:
+                        sum_ow += sos_dict[opp]["ow%"]
+                        num += 1
+                    d["oow%"] = (sum_ow / num)
+                    d["sos"] = (d["ow%"] * 2 + d["oow%"]) / 3
+
+        sos_year_df = output_df[output_df["Season"] == year]
+        team_list = sos_year_df["TeamID"].tolist()
+        for row in output_df[output_df["Season"] == year].itertuples():
+            output_df.iat[row.Index, output_df.columns.get_loc("SOS")] = sos_dict[row[2]]["sos"]
+
+        sos_dict.clear()
+
+    return output_df
+
 def import_legacy(cols, years):
     # for runtime
     start_time = time.time()
@@ -96,6 +157,9 @@ def import_legacy(cols, years):
                                                    len(team_L_df.index), score_total, pa_total, rebs_total,
                                                    ast_total, stl_total, blk_total, pf_total, to_total, sos_temp,
                                                    fgp_total]
+
+    team_avgs = SoS_calc(reg_season_df, team_avgs, years)
+
     runtime = time.time() - start_time
     return runtime, team_avgs, reg_season_df
 
@@ -156,6 +220,8 @@ def import_year(cols):
                                                          len(team_loss_df.index), score_total, pa_total, rebs_total,
                                                          ast_total, stl_total, blk_total, pf_total, to_total, sos_temp,
                                                          fgp_total]
+
+    team_avgs_2022 = SoS_calc(reg_2022_df, team_avgs_2022, [2022])
 
     runtime = time.time() - start_time
     return runtime, team_avgs_2022, reg_2022_df
