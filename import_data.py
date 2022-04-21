@@ -117,11 +117,6 @@ def import_legacy(cols, years):
             team_W = year_df[year_df['WTeamID'].apply(pd.to_numeric) == key]
             team_L = year_df[year_df['LTeamID'].apply(pd.to_numeric) == key]
 
-            # print(f"key: ", key)
-            # print(f"year: ", year)
-            # print(f"w_df: ", team_1211W)
-            # print(f"l_df: ", team_1211L)
-
             team_W_df = team_W[
                 ['Season', 'WTeamID', 'WScore', 'LScore', 'WFGM', 'WFGA', 'WFGM3', 'WFGA3', 'WFTM', 'WFTA', 'WOR',
                  'WDR', 'WAst', 'WTO', 'WStl', 'WBlk', 'WPF']].apply(pd.to_numeric)
@@ -161,7 +156,7 @@ def import_legacy(cols, years):
     team_avgs = SoS_calc(reg_season_df, team_avgs, years)
 
     runtime = time.time() - start_time
-    return runtime, team_avgs, reg_season_df
+    return runtime, team_avgs, reg_season_df, tourney_df, seeds_df
 
 
 def import_year(cols):
