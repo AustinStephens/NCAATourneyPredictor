@@ -73,8 +73,7 @@ def import_legacy(cols, years):
                                  'WFGA', 'WFGM3', 'WFGA3', 'WFTM', 'WFTA', 'WOR', 'WDR', 'WAst', 'WTO', 'WStl', 'WBlk',
                                  'WPF', 'LFGM', 'LFGA', 'LFGM3', 'LFGA3', 'LFTM', 'LFTA', 'LOR', 'LDR', 'LAst', 'LTO',
                                  'LStl', 'LBlk', 'LPF'],
-                          encoding="ISO-8859-1",
-                          low_memory=False)
+                          encoding="ISO-8859-1")
 
     # import tournament data (from same directory as this file)
     tourney_temp_df = pd.read_csv("./MNCAATourneyDetailedResults.csv",

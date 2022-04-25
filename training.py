@@ -58,6 +58,7 @@ def randomize_winner(trim_tourney_df, team_avgs, train_cols, seeds_df, cols, yea
 
 
 def tourney_2022(team_ids, team_avgs_2022, test_cols):
+
     temp_tourn_df = pd.DataFrame(data=team_ids)
     # winners = [2,1,1,2,1,2,2,1,2,1,1,1,1,2,1,1,1,1,1,2,1,2,1,1,2,1,1,1,1,2,2,1,2,1,2,1,1,2,2,2,2,2,2,2,1,1,1,2,1,2,1,1,2,2,1,2,2,2,1,2,2,1,2,1,2,2,2]
     tourney_2022_df = pd.DataFrame(columns=test_cols)
@@ -65,10 +66,10 @@ def tourney_2022(team_ids, team_avgs_2022, test_cols):
     for row in temp_tourn_df.iterrows():
         # Doing the same as before but without winner column
         temp_list = [2022, row[1]['Team1ID'], row[1]['Team2ID']]
-        print(f"team2: ", row[1]['Team2ID'])
+        #print(f"team2: ", row[1]['Team2ID'])
         team1_row = team_avgs_2022[team_avgs_2022["TeamID"] == row[1]['Team1ID']].values.tolist()
         team2_row = team_avgs_2022[team_avgs_2022["TeamID"] == row[1]['Team2ID']].values.tolist()
-        print(team2_row)
+        #print(team2_row)
         team1_row[0].pop(0)
         team1_row[0].pop(0)
         team2_row[0].pop(0)
